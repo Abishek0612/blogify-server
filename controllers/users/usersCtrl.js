@@ -359,6 +359,8 @@ exports.accountVerificationEmail = asyncHandler(async (req, res) => {
   });
   
   
+  
+  
 
 
 
@@ -369,6 +371,7 @@ exports.accountVerificationEmail = asyncHandler(async (req, res) => {
 exports.verifyAccount = asyncHandler(async (req, res) => {
     //Get the id/token params
     const { verifyToken } = req.params;
+    console.log(verifyToken)
     //Convert the token to actual token that has been saved in the db
     const cryptoToken = crypto
       .createHash("sha256")
@@ -384,8 +387,8 @@ exports.verifyAccount = asyncHandler(async (req, res) => {
     }
     //Update user account
     userFound.isVerified = true;
-    userFound.accountVerificationExpires = undefined;
-    userFound.accountVerificationToken = undefined;
+    // userFound.accountVerificationExpires = undefined;
+    // userFound.accountVerificationToken = undefined;
     //resave the user
     await userFound.save();
     res.status(200).json({ message: "Account  successfully verified" });
