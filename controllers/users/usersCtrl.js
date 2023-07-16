@@ -22,7 +22,8 @@ exports.register = asyncHandler(async (req, res) => {
     const newUser = new User({
         username,
         email,
-        password
+        password,
+        profilePicture: req?.file?.path,
     });
     //! hash password
     const salt = await bcrypt.genSalt(10)
@@ -80,18 +81,36 @@ exports.login = asyncHandler(async (req, res) => {
 //@access private
 
 exports.getProfile = asyncHandler(async (req, res, next) => {
-
     //! get user id from params
-    const id = req.userAuth._id
+    const id = req.userAuth._id;
     const user = await User.findById(id)
-    console.log(user)
+        .populate({
+            path: "posts",
+            model: "Post",
+        })
+        .populate({
+            path: "following",
+            model: "User",
+        })
+        .populate({
+            path: "followers",
+            model: "User",
+        })
+        .populate({
+            path: "blockedUsers",
+            model: "User",
+        })
+        .populate({
+            path: "profileViewers",
+            model: "User",
+        });
     res.json({
-        status: 'success',
-        message: 'Profile fetched',
-        user
-    })
-}
-)
+        status: "success",
+        message: "Profile fetched",
+        user,
+    });
+});
+
 
 
 //@desc Block a  user
@@ -312,23 +331,23 @@ exports.resetPassword = asyncHandler(async (req, res) => {
     //Find the user by the crypto token
     const userFound = await User.findOne({
         passwordResetToken: cryptoToken,
-        passwordResetExpires:{$gt : Date.now()}
+        passwordResetExpires: { $gt: Date.now() }
     })
-    if(!userFound){
-        throw new Error( 'Password reset token is invalid or has expired')
+    if (!userFound) {
+        throw new Error('Password reset token is invalid or has expired')
     }
     //Update the user password
     const salt = await bcrypt.genSalt(10);
     userFound.password = await bcrypt.hash(password, salt)
     userFound.passwordResetExpires = undefined;
     userFound.passwordResetToken = undefined
-    
+
     //resave the user
     await userFound.save()
 
     res.json({
         message: 'Password reset successfully',
-        
+
     })
 })
 
@@ -345,7 +364,7 @@ exports.accountVerificationEmail = asyncHandler(async (req, res) => {
     //Find the login user email
     const user = await User.findById(req?.userAuth?._id);
     if (!user) {
-      throw new Error("User not found");
+        throw new Error("User not found");
     }
     //send the token
     const token = await user.generateAccVerificationToken();
@@ -354,13 +373,13 @@ exports.accountVerificationEmail = asyncHandler(async (req, res) => {
     //send the email
     sendAccVerificationEmail(user?.email, token);
     res.status(200).json({
-      message: `Account verification email sent ${user?.email}`,
+        message: `Account verification email sent ${user?.email}`,
     });
-  });
-  
-  
-  
-  
+});
+
+
+
+
 
 
 
@@ -374,16 +393,16 @@ exports.verifyAccount = asyncHandler(async (req, res) => {
     console.log(verifyToken)
     //Convert the token to actual token that has been saved in the db
     const cryptoToken = crypto
-      .createHash("sha256")
-      .update(verifyToken)
-      .digest("hex");
+        .createHash("sha256")
+        .update(verifyToken)
+        .digest("hex");
     //find the user by the crypto token
     const userFound = await User.findOne({
-      accountVerificationToken: cryptoToken,
-      accountVerificationExpires: { $gt: Date.now() },
+        accountVerificationToken: cryptoToken,
+        accountVerificationExpires: { $gt: Date.now() },
     });
     if (!userFound) {
-      throw new Error("Account verification  token is invalid or has expired");
+        throw new Error("Account verification  token is invalid or has expired");
     }
     //Update user account
     userFound.isVerified = true;
@@ -392,4 +411,4 @@ exports.verifyAccount = asyncHandler(async (req, res) => {
     //resave the user
     await userFound.save();
     res.status(200).json({ message: "Account  successfully verified" });
-  });
+});
