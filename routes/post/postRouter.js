@@ -1,8 +1,9 @@
 const express = require('express');
 const isLoggin = require('../../middlewares/isLoggin');
-const { createPost, getPosts, getSinlglePost, updatePost, deletePost, likePost, disLikePost, claps, schedule } = require('../../controllers/posts/posts');
+const { createPost, getPosts, getSinlglePost, updatePost, deletePost, likePost, disLikePost, claps, schedule, getPublicPosts } = require('../../controllers/posts/posts');
 const storage = require('../../utils/fileUpload');
-const multer = require('multer')
+const multer = require('multer');
+const checkAccountVerification = require('../../middlewares/isAccountVerified');
 
 const postsRouter = express.Router();
 
@@ -10,19 +11,23 @@ const postsRouter = express.Router();
 const upload = multer({ storage })
 
 //create
-postsRouter.post('/', isLoggin, upload.single("file"), createPost)
+postsRouter.post('/', isLoggin, checkAccountVerification, upload.single("file"), createPost)
+
+
+//? get public posts (only 4 post)
+postsRouter.get('/public', getPublicPosts)
 
 //! getting all posts
 postsRouter.get('/', isLoggin, getPosts);
 
-//! getting single posts
-postsRouter.get('/', getSinlglePost);
+// //! getting single posts
+// postsRouter.get('/', getSinlglePost);
 
 //? get single post
-postsRouter.get('/:id', isLoggin, getSinlglePost)
+postsRouter.get('/:id', getSinlglePost)
 
 //* update post
-postsRouter.put('/:id', isLoggin, updatePost)
+postsRouter.put('/:id', isLoggin,upload.single("file"), updatePost)
 
 //? Delete post
 postsRouter.delete('/:id', isLoggin, deletePost)

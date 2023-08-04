@@ -17,6 +17,10 @@ exports.createPost = asyncHandler(async (req, res) => {
     if (postFound) {
         throw new Error('Post already exists')
     }
+
+//Check if user account is verified
+
+
     //create posts
     const createPosts = await Post.create({
         title,
@@ -89,7 +93,7 @@ exports.getPosts = asyncHandler(async (req, res) => {
 //@access Public
 
 exports.getPublicPosts = asyncHandler(async (req, res) => {
-    const posts = await Post.find({}).sort({ createdAt: -1 }).limit(4)
+    const posts = await Post.find({}).sort({ createdAt: -1 }).limit(4).populate('category')
     res.status(201).json({
         status: "success",
         message: 'Posts successfully fetched',
@@ -105,6 +109,8 @@ exports.getPublicPosts = asyncHandler(async (req, res) => {
 
 exports.getSinlglePost = asyncHandler(async (req, res) => {
     const singlePost = await Post.findById(req.params.id)
+        .populate("author")
+        .populate("category");
 
     res.status(201).json({
         status: 'success',

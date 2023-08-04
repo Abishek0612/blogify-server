@@ -1,5 +1,6 @@
 const dotenv = require('dotenv')
 dotenv.config()
+const cors = require('cors')
 const http = require('http')
 const express = require('express')
 const usersRouter = require('./routes/users/usersRouter');
@@ -11,13 +12,16 @@ const sendEmail = require('./utils/sendEmail');
 
 //db connect(require is a function and we are calling that function which means immediately invoke function)
 require('./config/database')()
-sendEmail('uabishek6@gmail.com', '87347834')
+sendEmail('uabishek6s@gmail.com', '87347834')
 
 //!server
 const app = express();
 
 //middlewares
 app.use(express.json()); //pass incoming data
+
+//! cors middlewares
+app.use(cors())
 
 // Routes
 app.use('/api/v1/users', usersRouter)

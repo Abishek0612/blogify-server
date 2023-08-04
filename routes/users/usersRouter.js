@@ -10,8 +10,9 @@ const usersRouter = express.Router()
 //!file upload middleware
 const upload = multer({ storage })
 
-//!Register
-usersRouter.post('/register',upload.single('profilePicture'), register)
+//!Register (commented coz profile image not required in the frontend while registering, just fr reference commented)
+// usersRouter.post('/register',upload.single('profilePicture'), register)
+usersRouter.post('/register', register)
 
 // login
 usersRouter.post('/login', login)
@@ -39,20 +40,19 @@ usersRouter.put('/unfollowing/:userToUnFollowId', isLoggin, UnFollowingUser)
 
 
 //Forgot password 
-usersRouter.post('/forgot-password',forgotPassword)
+usersRouter.post('/forgot-password', forgotPassword)
 
 
 //Reset password 
-usersRouter.post('/reset-password/:resetToken',resetPassword)
+usersRouter.post('/reset-password/:resetToken', resetPassword)
 
 
 //Send Account verification email 
-usersRouter.put('/account-verification-email',isLoggin, accountVerificationEmail)
+usersRouter.put('/account-verification-email', isLoggin, accountVerificationEmail)
 
 
-//Send Account verification email 
-usersRouter.put('/account-verification/:verifyToken',isLoggin, verifyAccount)
-
+//Get Account verification email 
+usersRouter.get("/account-verification/:verifyToken", isLoggin, verifyAccount);
 
 
 //* Export

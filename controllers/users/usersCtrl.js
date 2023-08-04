@@ -23,7 +23,7 @@ exports.register = asyncHandler(async (req, res) => {
         username,
         email,
         password,
-        profilePicture: req?.file?.path,
+        // profilePicture: req?.file?.path,
     });
     //! hash password
     const salt = await bcrypt.genSalt(10)
@@ -53,7 +53,7 @@ exports.login = asyncHandler(async (req, res) => {
     //! check if exists
     const user = await User.findOne({ username });
     if (!user) {
-        throw new Error('Invalid login credentials')
+        throw new Error('User doesnt exist , Please Register')
     }
     //compare the hashed password with the one the request
     const isMatched = await bcrypt.compare(password, user?.password)
@@ -370,10 +370,11 @@ exports.accountVerificationEmail = asyncHandler(async (req, res) => {
     const token = await user.generateAccVerificationToken();
     //resave
     await user.save();
+    console.log(token)
     //send the email
     sendAccVerificationEmail(user?.email, token);
     res.status(200).json({
-        message: `Account verification email sent ${user?.email}`,
+        message: `Account verification email sent to ${user?.email}`,
     });
 });
 
@@ -384,31 +385,87 @@ exports.accountVerificationEmail = asyncHandler(async (req, res) => {
 
 
 //@desc  Verify Token   
-//@route PUT /api/v1/users/verify-account/:verifyToken
+//@route Get /api/v1/users/account-verification/:verifyToken
 //@access Private
+
+// exports.verifyAccount = asyncHandler(async (req, res) => {
+//     //Get the id/token params
+//     const { verifyToken } = req.params;
+//     // console.log(verifyToken)
+//     //Convert the token to actual token that has been saved in the db
+//     const cryptoToken = crypto
+//         .createHash("sha256")
+//         .update(verifyToken)
+//         .digest("hex");
+//     //find the user by the crypto token
+//     const userFound = await User.findOne({
+//         accountVerificationToken: cryptoToken,
+//         accountVerificationExpires: { $gt: Date.now() },
+//     });
+//     if (!userFound) {
+//         throw new Error("Account verification  token is invalid or has expired");
+//     }
+//     //Update user account
+//     userFound.isVerified = true;
+//     // userFound.accountVerificationExpires = undefined;
+//     // userFound.accountVerificationToken = undefined;
+//     //resave the user
+//     await userFound.save();
+//     res.status(200).json({ message: "Account  successfully verified" });
+// });
+
+
+
+// exports.verifyAccount = asyncHandler(async (req, res) => {
+//     const { token } = req.params;
+//     console.log(token)
+//     const user = await User.findOne({
+//       accountVerificationToken: crypto
+//         .createHash("sha256")
+//         .update(token)
+//         .digest("hex"),
+//       accountVerificationExpires: { $gt: Date.now() },
+//     });
+  
+//     if (!user) {
+//       return res
+//         .status(400)
+//         .json({ message: "Password reset token is invalid or has expired" });
+//     }
+  
+//     user.isVerified = true;
+  
+//     await user.save({
+//       validateBeforeSave: false,
+//     });
+  
+//     res.status(200).json({ message: "Account Verified successfully" });
+//   });
+
 
 exports.verifyAccount = asyncHandler(async (req, res) => {
     //Get the id/token params
     const { verifyToken } = req.params;
-    console.log(verifyToken)
+    console.log("verifyToken", verifyToken);
     //Convert the token to actual token that has been saved in the db
     const cryptoToken = crypto
-        .createHash("sha256")
-        .update(verifyToken)
-        .digest("hex");
+      .createHash("sha256")
+      .update(verifyToken)
+      .digest("hex");
     //find the user by the crypto token
     const userFound = await User.findOne({
-        accountVerificationToken: cryptoToken,
-        accountVerificationExpires: { $gt: Date.now() },
+      accountVerificationToken: cryptoToken,
+      accountVerificationExpires: { $gt: Date.now() },
     });
     if (!userFound) {
-        throw new Error("Account verification  token is invalid or has expired");
+      throw new Error("Account verification  token is invalid or has expired");
     }
     //Update user account
     userFound.isVerified = true;
-    // userFound.accountVerificationExpires = undefined;
-    // userFound.accountVerificationToken = undefined;
+    userFound.accountVerificationExpires = undefined;
+    userFound.accountVerificationToken = undefined;
     //resave the user
     await userFound.save();
-    res.status(200).json({ message: "Account  successfully verified" });
-});
+    res.status(200).json({ message: "Account  successfully verified" });
+  });
+  
