@@ -18,7 +18,7 @@ exports.createPost = asyncHandler(async (req, res) => {
         throw new Error('Post already exists')
     }
 
-//Check if user account is verified
+    //Check if user account is verified
 
 
     //create posts
@@ -79,7 +79,13 @@ exports.getPosts = asyncHandler(async (req, res) => {
         }]
     }
 
-    const posts = await Post.find(query) //.populate('comments')
+    const posts = await Post.find(query)
+        .populate({
+            path: "author",
+            model: "User",
+            select: "email role username"
+        })
+        .populate("category")
     res.status(201).json({
         status: 'success',
         message: 'Posts successfully fetched',
@@ -107,14 +113,22 @@ exports.getPublicPosts = asyncHandler(async (req, res) => {
 //@route GET/api/v1/posts/:id
 //@access Public
 
-exports.getSinlglePost = asyncHandler(async (req, res) => {
+exports.getSinglePost = asyncHandler(async (req, res) => {
     const singlePost = await Post.findById(req.params.id)
         .populate("author")
-        .populate("category");
+        .populate("category") //.populate("comment")
+        .populate({
+            path: "comments",
+            model: "Comment",
+            populate: {
+                path: 'author',
+                select: 'username',
+            },
+        });
 
     res.status(201).json({
         status: 'success',
-        message: 'Post successfully fetched',
+        message: 'Single post successfully fetched',
         singlePost
     })
 })
@@ -125,6 +139,14 @@ exports.getSinlglePost = asyncHandler(async (req, res) => {
 //@access Private
 
 exports.deletePost = asyncHandler(async (req, res) => {
+    //! Find the post (this logic is that only a logged in user if is id matches with the post he can able to delete is own post, or we will get a error sayin Action denied)
+    const postFound = await Post.findById(req.params.id)
+    const isAuthor = req.userAuth?._id?.toString() === postFound?.author?._id?.toString()
+    console.log(isAuthor)
+    // console.log(postFound?.author?._id)
+    if (!isAuthor) {
+        throw new Error('Action denied, you are not the creator of this post')
+    }
     await Post.findByIdAndDelete(req.params.id)
     res.status(201).json({
         status: 'success',
@@ -138,8 +160,22 @@ exports.deletePost = asyncHandler(async (req, res) => {
 //@access Private
 
 exports.updatePost = asyncHandler(async (req, res) => {
-    const post = await Post.findByIdAndUpdate(req.params.id,
-        req.body,
+    //!check if the post exists
+    const { id } = req.params
+    const postFound = await Post.findById(id);
+    if (!postFound) {
+        throw new Error("Post not found")
+    }
+
+    //?image update
+    const { title, category, content } = req.body;
+
+    const post = await Post.findByIdAndUpdate(id, {
+        image: req?.file?.path ? req?.file?.path : postFound?.image,
+        title: title ? title : postFound?.title,
+        category: category ? category : postFound?.category,
+        content: content ? content : postFound?.content
+    },
         {
             new: true,
             runValidators: true,
@@ -176,6 +212,33 @@ exports.likePost = asyncHandler(async (req, res) => {
     //Remove the user from the dislikes array if present
     post.dislikes = post.dislikes.filter(
         (dislikes) => dislikes.toString() !== userId.toString())
+
+    //resave the post
+    await post.save()
+    res.status(200).json({ message: "Post like successfully", post })
+})
+
+
+//@desc Post view  POST
+//@route PUT/api/v1/posts/likes/:id/post-views-count
+//@access Private
+
+exports.postViewCount = asyncHandler(async (req, res) => {
+    //Get the id of the post
+    const { id } = req.params
+    //get the login user
+    const userId = req.userAuth._id;
+    //Find the post
+    const post = await Post.findById(id);
+    if (!post) {
+        throw new Error("Post not found")
+    }
+    //Push the user into post likes
+    await Post.findByIdAndUpdate(id, {
+        $addToSet: { postViews: userId }
+    }, {
+        new: true
+    }).populate('author');
 
     //resave the post
     await post.save()

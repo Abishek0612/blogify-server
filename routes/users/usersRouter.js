@@ -1,5 +1,5 @@
 const express = require('express')
-const { register, login, getProfile, blockUser, unblockUser, profileViewers, followingUser, UnFollowingUser, forgotPassword, resetPassword, accountVerificationEmail, verifyAccount } = require('../../controllers/users/usersCtrl')
+const { register, login, blockUser, unblockUser, profileViewers, followingUser, UnFollowingUser, forgotPassword, resetPassword, accountVerificationEmail, verifyAccount, getPrivateProfile, getPublicProfile } = require('../../controllers/users/usersCtrl')
 const isLoggin = require('../../middlewares/isLoggin')
 const storage = require('../../utils/fileUpload');
 const multer = require('multer')
@@ -18,8 +18,11 @@ usersRouter.post('/register', register)
 usersRouter.post('/login', login)
 
 //profile
-usersRouter.get("/profile", isLoggin, getProfile)
+usersRouter.get("/profile/", isLoggin, getPrivateProfile)
 
+
+//public profile
+usersRouter.get("/public-profile/:userId", getPublicProfile)
 
 //? block user
 usersRouter.put("/block/:userIdToBlock", isLoggin, blockUser)

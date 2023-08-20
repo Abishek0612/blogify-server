@@ -1,6 +1,6 @@
 const express = require('express');
 const isLoggin = require('../../middlewares/isLoggin');
-const { createPost, getPosts, getSinlglePost, updatePost, deletePost, likePost, disLikePost, claps, schedule, getPublicPosts } = require('../../controllers/posts/posts');
+const { createPost, getPosts, getSinglePost, updatePost, deletePost, likePost, disLikePost, claps, schedule, getPublicPosts, postViewCount } = require('../../controllers/posts/posts');
 const storage = require('../../utils/fileUpload');
 const multer = require('multer');
 const checkAccountVerification = require('../../middlewares/isAccountVerified');
@@ -21,10 +21,10 @@ postsRouter.get('/public', getPublicPosts)
 postsRouter.get('/', isLoggin, getPosts);
 
 // //! getting single posts
-// postsRouter.get('/', getSinlglePost);
+// postsRouter.get('/', getSinglePost);
 
 //? get single post
-postsRouter.get('/:id', getSinlglePost)
+postsRouter.get('/:id', getSinglePost)
 
 //* update post
 postsRouter.put('/:id', isLoggin,upload.single("file"), updatePost)
@@ -38,6 +38,9 @@ postsRouter.put('/likes/:id', isLoggin, likePost)
 
 //* dislike post
 postsRouter.put('/dislike/:id', isLoggin, disLikePost)
+
+//* post views
+postsRouter.put('/:id/post-view-count', isLoggin, postViewCount)
 
 //Clapping a post
 postsRouter.put('/claps/:id', isLoggin, claps)

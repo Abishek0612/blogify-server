@@ -76,11 +76,11 @@ exports.login = asyncHandler(async (req, res) => {
 )
 
 
-//@desc Get profile
-//@route POST /api/v1/users/profile/:id
+//@desc Get  private  profile
+//@route Get /api/v1/users/profile/
 //@access private
 
-exports.getProfile = asyncHandler(async (req, res, next) => {
+exports.getPrivateProfile = asyncHandler(async (req, res, next) => {
     //! get user id from params
     const id = req.userAuth._id;
     const user = await User.findById(id)
@@ -107,6 +107,28 @@ exports.getProfile = asyncHandler(async (req, res, next) => {
     res.json({
         status: "success",
         message: "Profile fetched",
+        user,
+    });
+});
+
+
+//@desc Get public profile
+//@route Get /api/v1/users/public-profile/:userId
+//@access public
+
+exports.getPublicProfile = asyncHandler(async (req, res, next) => {
+    //! get user id from params
+    const userId = req.params.userId;
+    const user = await User.findById(userId).select('-password')
+    .populate({
+        path:'posts',
+        populate:{
+            path:'category'
+        }
+    })
+    res.json({
+        status: "success",
+        message: "Public Profile fetched",
         user,
     });
 });
@@ -426,19 +448,19 @@ exports.accountVerificationEmail = asyncHandler(async (req, res) => {
 //         .digest("hex"),
 //       accountVerificationExpires: { $gt: Date.now() },
 //     });
-  
+
 //     if (!user) {
 //       return res
 //         .status(400)
 //         .json({ message: "Password reset token is invalid or has expired" });
 //     }
-  
+
 //     user.isVerified = true;
-  
+
 //     await user.save({
 //       validateBeforeSave: false,
 //     });
-  
+
 //     res.status(200).json({ message: "Account Verified successfully" });
 //   });
 
@@ -449,16 +471,16 @@ exports.verifyAccount = asyncHandler(async (req, res) => {
     console.log("verifyToken", verifyToken);
     //Convert the token to actual token that has been saved in the db
     const cryptoToken = crypto
-      .createHash("sha256")
-      .update(verifyToken)
-      .digest("hex");
+        .createHash("sha256")
+        .update(verifyToken)
+        .digest("hex");
     //find the user by the crypto token
     const userFound = await User.findOne({
-      accountVerificationToken: cryptoToken,
-      accountVerificationExpires: { $gt: Date.now() },
+        accountVerificationToken: cryptoToken,
+        accountVerificationExpires: { $gt: Date.now() },
     });
     if (!userFound) {
-      throw new Error("Account verification  token is invalid or has expired");
+        throw new Error("Account verification  token is invalid or has expired");
     }
     //Update user account
     userFound.isVerified = true;
@@ -466,6 +488,5 @@ exports.verifyAccount = asyncHandler(async (req, res) => {
     userFound.accountVerificationToken = undefined;
     //resave the user
     await userFound.save();
-    res.status(200).json({ message: "Account  successfully verified" });
-  });
-  
+    res.status(200).json({ message: "Account  successfully verified" });
+});
