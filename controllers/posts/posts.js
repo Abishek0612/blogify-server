@@ -9,6 +9,16 @@ const Category = require('../../model/Category/Category')
 //@access Private
 
 exports.createPost = asyncHandler(async (req, res) => {
+    //! Find the user/check if user account is verified
+    const userFound = await User.findById(req.userAuth._id)
+    if(!userFound){
+        throw new Error ('User not found')
+    }
+
+    if(!userFound?.isVerified){
+        throw new Error ('Action denied, your account is not verified')
+    }
+
     //Get the payload
     const { title, content, categoryId } = req.body;
 
