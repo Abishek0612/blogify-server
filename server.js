@@ -30,6 +30,11 @@ app.use('/api/v1/categories', categoryRouter)
 app.use('/api/v1/posts', postsRouter)
 app.use('/api/v1/comments', commentRouter)
 
+
+app.all('*', (req, res) => {
+    res.status(404).send('Page not found');
+});
+
 //! Error middleware
 app.use(globalErrHandler)
 
