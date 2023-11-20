@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node --trace-deprecation server.js",
     "server": "nodemon server.js"
   },
   "engines": {
@@ -24,9 +24,9 @@
     "mongoose": "^7.3.1",
     "multer": "^1.4.5-lts.1",
     "multer-storage-cloudinary": "^4.0.0",
-    "nodemailer": "^6.9.3",
-    "nodemon": "^2.0.22"
+    "nodemailer": "^6.9.3"
   },
   "devDependencies": {
+    "nodemon": "^2.0.22"
   }
 }
